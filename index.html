@@ -399,7 +399,7 @@
       hamsterElem.style.pointerEvents = 'auto';
     }
 
-    tg.MainButton.setText(`Баланс: ${balance} 🐹`);
+    tg.MainButton.setText(`Баланс: ${balance} `);
     tg.MainButton.show();
   }
 
@@ -488,7 +488,7 @@
   updateUI();
 
   tg.MainButton.onClick(() => {
-    alert("Баланс", b);
+    alert("Баланс ${balance}");
   });
 </script>
 </body>
