@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>Хомяк Тапалка с Аватаром и Темой</title>
+<title>Хомяк Тапалка с Вращением</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <style>
   body {
@@ -41,7 +41,6 @@
     background: var(--container-bg-dark);
     color: var(--text-color-dark);
   }
-  /* Шапка */
   .header {
     display: flex;
     align-items: center;
@@ -81,8 +80,6 @@
   .theme-switcher:hover {
     background: var(--accent-hover);
   }
-
-  /* Остальной стиль (табы и игра) */
   .tabs {
     display: flex; justify-content: space-around; margin-bottom: 15px;
   }
@@ -122,9 +119,6 @@
     cursor: not-allowed;
     pointer-events: none;
   }
-  .h:active:not(.disabled) {
-    transform: scale(1.1) rotate(5deg);
-  }
   button.r {
     margin-top: 10px; background: var(--accent-color); color: #fff; border: none;
     padding: 10px 20px; border-radius: 10px; cursor: pointer;
@@ -132,10 +126,6 @@
   }
   button.r:hover:not(:disabled) {
     background: var(--accent-hover);
-  }
-  button.r:disabled {
-    background: #aaa;
-    cursor: not-allowed;
   }
   .upgrade, .skin {
     margin-bottom: 15px;
@@ -150,9 +140,6 @@
   .upgrade button, .skin button {
     background: #32cd32; color: white; border: none; padding: 5px 10px;
     border-radius: 5px; cursor: pointer;
-  }
-  .upgrade button:disabled, .skin button:disabled {
-    background: #aaa; cursor: not-allowed;
   }
   .skins-list {
     max-height: 200px; overflow-y: auto;
@@ -185,7 +172,7 @@
     <div class="b">Баланс: <span id="b">0</span></div>
     <div class="e">Энергия: <span id="e">1000</span>/1000</div>
     <div class="eb-c"><div class="eb" id="eb"></div></div>
-    <img src="" alt="Хомяк" class="h" id="h" />
+    <img src="https://vlad-mark2020.github.io/XTAP/Pers1Night.png" alt="Хомяк" class="h" id="h" />
     <br />
     <button class="r" id="resetBtn">Сбросить</button>
   </div>
@@ -217,8 +204,6 @@
   // Темы
   const body = document.body;
   const themeSwitcher = document.getElementById('themeSwitcher');
-
-  // Читаем тему из localStorage
   function loadTheme() {
     const theme = localStorage.getItem('theme');
     if (theme === 'dark') {
@@ -229,7 +214,6 @@
       themeSwitcher.textContent = 'Тёмная тема';
     }
   }
-
   function toggleTheme() {
     if (body.classList.contains('dark')) {
       body.classList.remove('dark');
@@ -241,7 +225,6 @@
       themeSwitcher.textContent = 'Светлая тема';
     }
   }
-
   themeSwitcher.onclick = toggleTheme;
   loadTheme();
 
@@ -256,7 +239,6 @@
     upgradesSection: document.getElementById('upgradesSection'),
     skinsSection: document.getElementById('skinsSection'),
   };
-
   function activateTab(tabId) {
     for (const key in tabs) {
       tabs[key].classList.toggle('active', key === tabId);
@@ -265,7 +247,6 @@
       sections[key].classList.toggle('active', key === tabId.replace('Tab', 'Section'));
     }
   }
-
   tabs.gameTab.onclick = () => activateTab('gameTab');
   tabs.upgradesTab.onclick = () => activateTab('upgradesTab');
   tabs.skinsTab.onclick = () => activateTab('skinsTab');
@@ -284,55 +265,27 @@
   const avatarElem = document.getElementById('avatar');
   const usernameElem = document.getElementById('username');
 
-  // Переменные игры
-  let balance = 0;
-  let energy = 1000;
-  const maxEnergy = 1000;
-  let tapPower = 1;
-  let autoClickerPower = 0;
-  const tapUpgradeCost = 100;
-  const autoClickerCost = 200;
-
-  // Скины
+  let balance = 0, energy = 1000, tapPower = 1, autoClickerPower = 0;
+  const maxEnergy = 1000, tapUpgradeCost = 100, autoClickerCost = 200;
   const skins = [
     {name: "Стандартный", img: "https://vlad-mark2020.github.io/XTAP/Pers1Night.png", cost: 0, owned: true},
     {name: "Зелёный хомяк", img: "https://i.imgur.com/zD2YPXv.png", cost: 150, owned: false},
     {name: "Синий хомяк", img: "https://i.imgur.com/KQ6mZzZ.png", cost: 300, owned: false},
   ];
-  let activeSkin = 0;
+  let activeSkin = 0, tapTimes = [];
+  let rotation = 0, rotationSpeed = 0, lastClickTime = 0;
 
-  // Анти автокликер (массив времён тапов)
-  let tapTimes = [];
-
-  // Загрузка из localStorage
   function loadData() {
     try {
-      const storedBalance = localStorage.getItem('hamsterBalance');
-      if (storedBalance !== null) balance = parseInt(storedBalance) || 0;
-
-      const storedEnergy = localStorage.getItem('hamsterEnergy');
-      if (storedEnergy !== null) energy = parseFloat(storedEnergy) || maxEnergy;
-
-      const storedTapPower = localStorage.getItem('hamsterTapPower');
-      if (storedTapPower !== null) tapPower = parseInt(storedTapPower) || 1;
-
-      const storedAutoClicker = localStorage.getItem('hamsterAutoClickerPower');
-      if (storedAutoClicker !== null) autoClickerPower = parseInt(storedAutoClicker) || 0;
-
-      const storedOwnedSkins = localStorage.getItem('hamsterOwnedSkins');
-      if (storedOwnedSkins !== null) {
-        const owned = JSON.parse(storedOwnedSkins);
-        skins.forEach((skin, i) => skin.owned = owned.includes(i));
-      }
-
-      const storedActiveSkin = localStorage.getItem('hamsterActiveSkin');
-      if (storedActiveSkin !== null) activeSkin = parseInt(storedActiveSkin) || 0;
-    } catch {
-      // defaults
-    }
+      balance = parseInt(localStorage.getItem('hamsterBalance')) || 0;
+      energy = parseFloat(localStorage.getItem('hamsterEnergy')) || maxEnergy;
+      tapPower = parseInt(localStorage.getItem('hamsterTapPower')) || 1;
+      autoClickerPower = parseInt(localStorage.getItem('hamsterAutoClickerPower')) || 0;
+      const owned = JSON.parse(localStorage.getItem('hamsterOwnedSkins')) || [];
+      skins.forEach((s, i) => s.owned = owned.includes(i));
+      activeSkin = parseInt(localStorage.getItem('hamsterActiveSkin')) || 0;
+    } catch {}
   }
-
-  // Сохранение в localStorage
   function saveData() {
     localStorage.setItem('hamsterBalance', balance);
     localStorage.setItem('hamsterEnergy', energy);
@@ -342,15 +295,11 @@
     localStorage.setItem('hamsterOwnedSkins', JSON.stringify(ownedIndices));
     localStorage.setItem('hamsterActiveSkin', activeSkin);
   }
-
-  // Обновление UI
   function updateUI() {
     balanceElem.textContent = balance;
     energyElem.textContent = Math.floor(energy);
     energyBarElem.style.width = (energy / maxEnergy) * 100 + '%';
-
     hamsterElem.src = skins[activeSkin].img;
-
     buyTapUpgradeBtn.disabled = balance < tapUpgradeCost || tapPower > 1;
     buyAutoClickerBtn.disabled = balance < autoClickerCost || autoClickerPower > 0;
 
@@ -359,31 +308,21 @@
       const div = document.createElement('div');
       div.className = 'skin';
       if (i === activeSkin) div.classList.add('skin-selected');
-      div.innerHTML = `
-        <strong>${skin.name}</strong><br/>
+      div.innerHTML = `<strong>${skin.name}</strong><br/>
         <img src="${skin.img}" alt="${skin.name}" style="width:80px; display:block; margin:5px auto;" />
-        <div>Цена: ${skin.cost}</div>
-      `;
+        <div>Цена: ${skin.cost}</div>`;
       const btn = document.createElement('button');
       if (skin.owned) {
         btn.textContent = i === activeSkin ? 'Выбран' : 'Выбрать';
         btn.disabled = i === activeSkin;
-        btn.onclick = () => {
-          activeSkin = i;
-          saveData();
-          updateUI();
-        };
+        btn.onclick = () => { activeSkin = i; saveData(); updateUI(); };
       } else {
         btn.textContent = 'Купить';
         btn.disabled = balance < skin.cost;
         btn.onclick = () => {
           if (balance >= skin.cost) {
-            balance -= skin.cost;
-            skin.owned = true;
-            activeSkin = i;
-            saveData();
-            updateUI();
-            alert(`Вы купили скин "${skin.name}"`);
+            balance -= skin.cost; skin.owned = true; activeSkin = i;
+            saveData(); updateUI(); alert(`Вы купили скин "${skin.name}"`);
           }
         };
       }
@@ -399,97 +338,64 @@
       hamsterElem.style.pointerEvents = 'auto';
     }
 
-    tg.MainButton.setText(`Баланс: ${balance} `);
+    tg.MainButton.setText(`Баланс: ${balance}`);
     tg.MainButton.show();
   }
-
-  // Восстановление энергии
-  function restoreEnergy() {
-    if (energy < maxEnergy) {
-      energy = Math.min(energy + 0.5, maxEnergy);
-      saveData();
-      updateUI();
-    }
-  }
-
-  // Обработка кликов (антиавтокликер)
   hamsterElem.addEventListener('click', () => {
     const now = Date.now();
+    const timeSinceLastClick = now - lastClickTime;
+    lastClickTime = now;
+    rotationSpeed += timeSinceLastClick < 300 ? 5 : 2; // ускорение
+
     tapTimes.push(now);
     if (tapTimes.length > 10) tapTimes.shift();
     const recent = tapTimes.filter(t => now - t < 500);
-    if (recent.length > 6) return; // слишком быстро нажимают - игнор
+    if (recent.length > 6) return;
 
     if (energy >= 1) {
-      balance += tapPower;
-      energy--;
-      saveData();
-      updateUI();
+      balance += tapPower; energy--;
+      saveData(); updateUI();
     }
   });
+  function animateRotation() {
+    rotation += rotationSpeed;
+    hamsterElem.style.transform = `rotate(${rotation}deg)`;
+    rotationSpeed *= 0.98;
+    if (Math.abs(rotationSpeed) < 0.01) rotationSpeed = 0;
+    requestAnimationFrame(animateRotation);
+  }
+  animateRotation();
 
-  // Автокликер
   setInterval(() => {
-    if (autoClickerPower > 0) {
-      balance += autoClickerPower;
-      saveData();
-      updateUI();
-    }
-    restoreEnergy();
+    if (autoClickerPower > 0) { balance += autoClickerPower; saveData(); updateUI(); }
+    if (energy < maxEnergy) { energy = Math.min(energy + 0.5, maxEnergy); saveData(); updateUI(); }
   }, 1000);
 
-  // Улучшения
   buyTapUpgradeBtn.onclick = () => {
     if (balance >= tapUpgradeCost && tapPower === 1) {
-      balance -= tapUpgradeCost;
-      tapPower = 10;
-      saveData();
-      updateUI();
+      balance -= tapUpgradeCost; tapPower = 10; saveData(); updateUI();
     }
   };
   buyAutoClickerBtn.onclick = () => {
     if (balance >= autoClickerCost && autoClickerPower === 0) {
-      balance -= autoClickerCost;
-      autoClickerPower = 1;
-      saveData();
-      updateUI();
+      balance -= autoClickerCost; autoClickerPower = 1; saveData(); updateUI();
     }
   };
-
-  // Сброс
   resetBtn.onclick = () => {
     if (confirm("Вы действительно хотите сбросить прогресс?")) {
       balance = 0; energy = maxEnergy; tapPower = 1; autoClickerPower = 0;
-      skins.forEach((s,i) => s.owned = (i === 0));
-      activeSkin = 0;
-      saveData();
-      updateUI();
+      skins.forEach((s,i) => s.owned = (i === 0)); activeSkin = 0;
+      saveData(); updateUI();
     }
   };
-
-  // Получаем данные Telegram пользователя и отображаем аватар и имя
   function loadTelegramUser() {
     const user = tg.initDataUnsafe?.user || null;
-    if (user) {
-      usernameElem.textContent = user.username ? '@' + user.username : (user.first_name || 'Пользователь');
-      if (user.photo_url) {
-        avatarElem.src = user.photo_url;
-      } else {
-        avatarElem.src = 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; // Заглушка
-      }
-    } else {
-      avatarElem.src = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-      usernameElem.textContent = 'Гость';
-    }
+    usernameElem.textContent = user?.username ? '@'+user.username : user?.first_name || 'Гость';
+    avatarElem.src = user?.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
   }
-
   loadTelegramUser();
   loadData();
   updateUI();
-
-  tg.MainButton.onClick(() => {
-    alert("Баланс ${balance}");
-  });
 </script>
 </body>
 </html>
