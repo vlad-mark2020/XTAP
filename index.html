@@ -1,20 +1,83 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Хомяк Тапалка</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>MAIN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: sans-serif; margin: 0; background: #fbeed7; color: #000; display: flex; justify-content: center; padding: 20px; }
-    .container { background: #fff; border-radius: 15px; padding: 20px; width: 350px; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-    .tab { cursor: pointer; padding: 10px; background: coral; color: #fff; border-radius: 10px; margin: 5px 0; text-align: center; }
-    .section { display: none; }
-    .section.active { display: block; }
-    .upgrade { margin: 10px 0; padding: 10px; background: #eee; border-radius: 10px; }
-    .upgrade button { margin-top: 5px; background: green; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-    .upgrade button:disabled { background: gray; cursor: not-allowed; }
-    .b { font-weight: bold; font-size: 1.3em; margin-bottom: 10px; }
-    .h { width: 150px; cursor: pointer; display: block; margin: 0 auto 10px; transition: transform 0.1s; }
+    body {
+      font-family: sans-serif;
+      background: #fff5e6;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 15px;
+      width: 360px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .tab {
+      background: #ff7f50;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .b {
+      font-size: 1.4em;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .h {
+      display: block;
+      width: 150px;
+      margin: 10px auto;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .upgrade {
+      background: #f0f0f0;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .upgrade button {
+      margin-top: 5px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      background: #28a745;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .upgrade button:disabled {
+      background: gray !important;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -25,7 +88,7 @@
   <!-- Игра -->
   <div class="section active" id="game">
     <div class="b">Баланс: <span id="balance">0</span></div>
-    <img src="https://vlad-mark2020.github.io/XTAP/Pers1Night.png" alt="Хомяк" class="h" id="hamster">
+    <img src="https://vlad-mark2020.github.io/XTAP/Pers1Night.png" class="h" id="hamster" alt="Хомяк">
   </div>
 
   <!-- Улучшения -->
@@ -44,36 +107,58 @@
 </div>
 
 <script>
-  // Переменные
+  // --- Начальные данные ---
   let balance = parseInt(localStorage.getItem('balance')) || 0;
   let tapPower = parseInt(localStorage.getItem('tapPower')) || 1;
   let autoClicker = parseInt(localStorage.getItem('autoClicker')) || 0;
+
   let tapBought = localStorage.getItem('tapBought') === 'true';
   let autoClickerBought = localStorage.getItem('autoClickerBought') === 'true';
 
+  // --- Элементы ---
   const balanceElem = document.getElementById('balance');
   const hamster = document.getElementById('hamster');
   const tapBtn = document.getElementById('tapUpgradeBtn');
   const autoBtn = document.getElementById('autoClickerBtn');
 
-  // Обновление UI
+  // --- Обновление интерфейса ---
   function updateUI() {
     balanceElem.textContent = balance;
-    tapBtn.disabled = tapBought || balance < 100;
-    autoBtn.disabled = autoClickerBought || balance < 200;
-    if (tapBought) tapBtn.textContent = "Куплено";
-    if (autoClickerBought) autoBtn.textContent = "Куплено";
+
+    // Кнопка Тап
+    if (tapBought) {
+      tapBtn.disabled = true;
+      tapBtn.textContent = 'Куплено';
+    } else if (balance < 100) {
+      tapBtn.disabled = true;
+      tapBtn.textContent = 'Купить';
+    } else {
+      tapBtn.disabled = false;
+      tapBtn.textContent = 'Купить';
+    }
+
+    // Кнопка Автокликер
+    if (autoClickerBought) {
+      autoBtn.disabled = true;
+      autoBtn.textContent = 'Куплено';
+    } else if (balance < 200) {
+      autoBtn.disabled = true;
+      autoBtn.textContent = 'Купить';
+    } else {
+      autoBtn.disabled = false;
+      autoBtn.textContent = 'Купить';
+    }
   }
 
-  // Тап по хомяку
-  hamster.onclick = () => {
+  // --- Клик по хомяку ---
+  hamster.addEventListener('click', () => {
     balance += tapPower;
     localStorage.setItem('balance', balance);
     updateUI();
-  };
+  });
 
-  // Покупка улучшения
-  tapBtn.onclick = () => {
+  // --- Покупка улучшений ---
+  tapBtn.addEventListener('click', () => {
     if (!tapBought && balance >= 100) {
       balance -= 100;
       tapPower = 10;
@@ -83,9 +168,9 @@
       localStorage.setItem('tapBought', true);
       updateUI();
     }
-  };
+  });
 
-  autoBtn.onclick = () => {
+  autoBtn.addEventListener('click', () => {
     if (!autoClickerBought && balance >= 200) {
       balance -= 200;
       autoClicker = 1;
@@ -95,9 +180,9 @@
       localStorage.setItem('autoClickerBought', true);
       updateUI();
     }
-  };
+  });
 
-  // Автокликер
+  // --- Автокликер ---
   setInterval(() => {
     if (autoClicker > 0) {
       balance += autoClicker;
@@ -106,12 +191,13 @@
     }
   }, 1000);
 
-  // Переключение вкладок
+  // --- Переключение вкладок ---
   function showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
 
+  // --- Инициализация ---
   updateUI();
 </script>
 </body>
