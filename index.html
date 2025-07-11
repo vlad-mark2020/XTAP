@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<title>Хомяк Тапалка с Вращением</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<style>
+  <meta charset="UTF-8" />
+  <title>Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
   body {
     margin: 0; font-family: "Comic Sans MS", cursive, sans-serif;
     user-select: none;
@@ -149,7 +149,7 @@
     color: white !important;
   }
 </style>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 <div class="container">
@@ -180,12 +180,12 @@
   <!-- Улучшения -->
   <div class="section" id="upgradesSection">
     <div class="upgrade">
-      <div><strong>+10 за тап</strong></div>
+      <div><strong>+10 за тап (уровень <span id="tapUpgradeLevel">0</span>)</strong></div>
       <div>Цена: <span id="tapUpgradeCost">100</span></div>
       <button id="buyTapUpgradeBtn">Купить</button>
     </div>
     <div class="upgrade">
-      <div><strong>Автокликер +1/сек</strong></div>
+      <div><strong>Автокликер +1/сек (уровень <span id="autoClickerLevel">0</span>)</strong></div>
       <div>Цена: <span id="autoClickerCost">200</span></div>
       <button id="buyAutoClickerBtn">Купить</button>
     </div>
@@ -201,7 +201,6 @@
   const tg = window.Telegram.WebApp;
   tg.expand();
 
-  // Темы
   const body = document.body;
   const themeSwitcher = document.getElementById('themeSwitcher');
   function loadTheme() {
@@ -214,7 +213,7 @@
       themeSwitcher.textContent = 'Тёмная тема';
     }
   }
-  function toggleTheme() {
+  themeSwitcher.onclick = () => {
     if (body.classList.contains('dark')) {
       body.classList.remove('dark');
       localStorage.setItem('theme', 'light');
@@ -224,11 +223,9 @@
       localStorage.setItem('theme', 'dark');
       themeSwitcher.textContent = 'Светлая тема';
     }
-  }
-  themeSwitcher.onclick = toggleTheme;
+  };
   loadTheme();
 
-  // Вкладки
   const tabs = {
     gameTab: document.getElementById('gameTab'),
     upgradesTab: document.getElementById('upgradesTab'),
@@ -251,7 +248,6 @@
   tabs.upgradesTab.onclick = () => activateTab('upgradesTab');
   tabs.skinsTab.onclick = () => activateTab('skinsTab');
 
-  // UI элементы
   const balanceElem = document.getElementById('b');
   const energyElem = document.getElementById('e');
   const energyBarElem = document.getElementById('eb');
@@ -264,9 +260,16 @@
   const skinsListElem = document.getElementById('skinsList');
   const avatarElem = document.getElementById('avatar');
   const usernameElem = document.getElementById('username');
+  const tapUpgradeLevelElem = document.getElementById('tapUpgradeLevel');
+  const autoClickerLevelElem = document.getElementById('autoClickerLevel');
 
-  let balance = 0, energy = 1000, tapPower = 1, autoClickerPower = 0;
-  const maxEnergy = 1000, tapUpgradeCost = 100, autoClickerCost = 200;
+  let balance = 0, energy = 1000;
+  let tapPower = 1, autoClickerPower = 0;
+  let tapUpgradeLevel = 0, autoClickerLevel = 0;
+  const tapUpgradeBaseCost = 100;
+  const autoClickerBaseCost = 200;
+  const maxEnergy = 1000;
+
   const skins = [
     {name: "Стандартный", img: "https://vlad-mark2020.github.io/XTAP/Pers1Night.png", cost: 0, owned: true},
     {name: "Зелёный хомяк", img: "https://i.imgur.com/zD2YPXv.png", cost: 150, owned: false},
@@ -281,27 +284,42 @@
       energy = parseFloat(localStorage.getItem('hamsterEnergy')) || maxEnergy;
       tapPower = parseInt(localStorage.getItem('hamsterTapPower')) || 1;
       autoClickerPower = parseInt(localStorage.getItem('hamsterAutoClickerPower')) || 0;
+      tapUpgradeLevel = parseInt(localStorage.getItem('tapUpgradeLevel')) || 0;
+      autoClickerLevel = parseInt(localStorage.getItem('autoClickerLevel')) || 0;
       const owned = JSON.parse(localStorage.getItem('hamsterOwnedSkins')) || [];
       skins.forEach((s, i) => s.owned = owned.includes(i));
       activeSkin = parseInt(localStorage.getItem('hamsterActiveSkin')) || 0;
     } catch {}
   }
+
   function saveData() {
     localStorage.setItem('hamsterBalance', balance);
     localStorage.setItem('hamsterEnergy', energy);
     localStorage.setItem('hamsterTapPower', tapPower);
     localStorage.setItem('hamsterAutoClickerPower', autoClickerPower);
+    localStorage.setItem('tapUpgradeLevel', tapUpgradeLevel);
+    localStorage.setItem('autoClickerLevel', autoClickerLevel);
     const ownedIndices = skins.reduce((arr, s, i) => s.owned ? arr.concat(i) : arr, []);
     localStorage.setItem('hamsterOwnedSkins', JSON.stringify(ownedIndices));
     localStorage.setItem('hamsterActiveSkin', activeSkin);
   }
+
   function updateUI() {
     balanceElem.textContent = balance;
     energyElem.textContent = Math.floor(energy);
     energyBarElem.style.width = (energy / maxEnergy) * 100 + '%';
     hamsterElem.src = skins[activeSkin].img;
-    buyTapUpgradeBtn.disabled = balance < tapUpgradeCost || tapPower > 1;
-    buyAutoClickerBtn.disabled = balance < autoClickerCost || autoClickerPower > 0;
+
+    const tapCost = tapUpgradeBaseCost * (2 ** tapUpgradeLevel);
+    const autoClickerCost = autoClickerBaseCost * (2 ** autoClickerLevel);
+
+    tapUpgradeCostElem.textContent = tapCost;
+    autoClickerCostElem.textContent = autoClickerCost;
+    tapUpgradeLevelElem.textContent = tapUpgradeLevel;
+    autoClickerLevelElem.textContent = autoClickerLevel;
+
+    buyTapUpgradeBtn.disabled = balance < tapCost;
+    buyAutoClickerBtn.disabled = balance < autoClickerCost;
 
     skinsListElem.innerHTML = '';
     skins.forEach((skin, i) => {
@@ -341,22 +359,24 @@
     tg.MainButton.setText(`Баланс: ${balance}`);
     tg.MainButton.show();
   }
+
   hamsterElem.addEventListener('click', () => {
     const now = Date.now();
     const timeSinceLastClick = now - lastClickTime;
     lastClickTime = now;
-    rotationSpeed += timeSinceLastClick < 300 ? 5 : 2; // ускорение
-
+    rotationSpeed += timeSinceLastClick < 300 ? 5 : 2;
     tapTimes.push(now);
     if (tapTimes.length > 10) tapTimes.shift();
     const recent = tapTimes.filter(t => now - t < 500);
     if (recent.length > 6) return;
-
     if (energy >= 1) {
-      balance += tapPower; energy--;
-      saveData(); updateUI();
+      balance += tapPower;
+      energy--;
+      saveData();
+      updateUI();
     }
   });
+
   function animateRotation() {
     rotation += rotationSpeed;
     hamsterElem.style.transform = `rotate(${rotation}deg)`;
@@ -367,32 +387,59 @@
   animateRotation();
 
   setInterval(() => {
-    if (autoClickerPower > 0) { balance += autoClickerPower; saveData(); updateUI(); }
-    if (energy < maxEnergy) { energy = Math.min(energy + 0.5, maxEnergy); saveData(); updateUI(); }
+    if (autoClickerPower > 0) {
+      balance += autoClickerPower;
+    }
+    if (energy < maxEnergy) {
+      energy = Math.min(energy + 0.5, maxEnergy);
+    }
+    saveData();
+    updateUI();
   }, 1000);
 
   buyTapUpgradeBtn.onclick = () => {
-    if (balance >= tapUpgradeCost && tapPower === 1) {
-      balance -= tapUpgradeCost; tapPower = 10; saveData(); updateUI();
+    const cost = tapUpgradeBaseCost * (2 ** tapUpgradeLevel);
+    if (balance >= cost) {
+      balance -= cost;
+      tapUpgradeLevel++;
+      tapPower += 10;
+      saveData();
+      updateUI();
     }
   };
+
   buyAutoClickerBtn.onclick = () => {
-    if (balance >= autoClickerCost && autoClickerPower === 0) {
-      balance -= autoClickerCost; autoClickerPower = 1; saveData(); updateUI();
+    const cost = autoClickerBaseCost * (2 ** autoClickerLevel);
+    if (balance >= cost) {
+      balance -= cost;
+      autoClickerLevel++;
+      autoClickerPower += 1;
+      saveData();
+      updateUI();
     }
   };
+
   resetBtn.onclick = () => {
     if (confirm("Вы действительно хотите сбросить прогресс?")) {
-      balance = 0; energy = maxEnergy; tapPower = 1; autoClickerPower = 0;
-      skins.forEach((s,i) => s.owned = (i === 0)); activeSkin = 0;
-      saveData(); updateUI();
+      balance = 0;
+      energy = maxEnergy;
+      tapPower = 1;
+      autoClickerPower = 0;
+      tapUpgradeLevel = 0;
+      autoClickerLevel = 0;
+      skins.forEach((s, i) => s.owned = (i === 0));
+      activeSkin = 0;
+      saveData();
+      updateUI();
     }
   };
+
   function loadTelegramUser() {
     const user = tg.initDataUnsafe?.user || null;
     usernameElem.textContent = user?.username ? '@'+user.username : user?.first_name || 'Гость';
     avatarElem.src = user?.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
   }
+
   loadTelegramUser();
   loadData();
   updateUI();
